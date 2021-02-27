@@ -133,13 +133,9 @@ resource "google_compute_instance_template" "k8_masters" {
   }
 
   network_interface {
-    network_id = google_compute_network.vpc_network.id
-    subnetwork_ids = [google_compute_subnetwork.k8s-subnet-1.id,
-      google_compute_subnetwork.k8s-subnet-2.id,
-      google_compute_subnetwork.k8s-subnet-3.id,
-    ]
-    nat = true
+    network_ip = google_compute_network.vpc_network.id
   }
+
 
 
   service_account {
@@ -247,12 +243,8 @@ resource "google_compute_instance_template" "k8_workers" {
   }
 
   network_interface {
-    network_id = google_compute_network.vpc_network.id
-    subnetwork_ids = [google_compute_subnetwork.k8s-subnet-1.id,
-      google_compute_subnetwork.k8s-subnet-2.id,
-      google_compute_subnetwork.k8s-subnet-3.id,
-    ]
-    nat = true
+    network_ip = google_compute_network.vpc_network.id
+
   }
 
 
@@ -346,12 +338,8 @@ resource "google_compute_instance_template" "k8_ingresses" {
   }
 
   network_interface {
-    network_id = google_compute_network.vpc_network.id
-    subnetwork_ids = [google_compute_subnetwork.k8s-subnet-1.id,
-      google_compute_subnetwork.k8s-subnet-2.id,
-      google_compute_subnetwork.k8s-subnet-3.id,
-    ]
-    nat = true
+    network_ip = google_compute_network.vpc_network.id
+
   }
 
 
@@ -422,7 +410,7 @@ output "google_compute_instance_group_manager_k8_masters_public_ips" {
   description = "Public IP addresses for master-nodes"
   value = [
     google_compute_instance_group_manager.k8_masters_manager.instance_template,
-    google_compute_instance_template.k8_masters.network_interface.0.nat,
+    google_compute_instance_template.k8_masters.network_interface.0.alias_ip_range,
   ]
 }
 output "google_compute_instance_group_manager_k8_masters_private_ips" {
@@ -436,7 +424,7 @@ output "google_compute_instance_group_manager_k8_workers_public_ips" {
   description = "Public IP addresses for worker-nodes"
   value = [
     google_compute_instance_group_manager.k8_workers_manager.instance_template,
-    google_compute_instance_template.k8_workers.network_interface.0.nat,
+    google_compute_instance_template.k8_workers.network_interface.0.alias_ip_range,
   ]
 }
 
@@ -452,7 +440,7 @@ output "instance_group_ingresses_public_ips" {
   description = "Public IP addresses for ingress-nodes"
   value = [
     google_compute_instance_group_manager.k8_ingresses_manager.instance_template,
-    google_compute_instance_template.k8_ingresses.network_interface.nat,
+    google_compute_instance_template.k8_ingresses.network_interface.alias_ip_range,
   ]
 }
 
