@@ -163,14 +163,14 @@ resource "google_compute_instance_template" "k8_masters" {
   }
 }
 
-data "google_compute_image" "my_image" {
+data "google_compute_image" "master_image" {
   family  = "debian-9"
   project = "debian-cloud"
 }
 
 resource "google_compute_disk" "k8_masters_disk" {
   name  = "existing-disk"
-  image = data.google_compute_image.my_image.self_link
+  image = data.google_compute_image.master_image.self_link
   size  = 10
   type  = "network-ssd"
   zones = ["europe-west3-a",
@@ -280,14 +280,14 @@ resource "google_compute_instance_template" "k8_workers" {
   }
 }
 
-data "google_compute_image" "my_image" {
+data "google_compute_image" "worker_image" {
   family  = "debian-9"
   project = "debian-cloud"
 }
 
 resource "google_compute_disk" "k8_workers_disk" {
   name  = "existing-disk"
-  image = data.google_compute_image.my_image.self_link
+  image = data.google_compute_image.worker_image.self_link
   size  = 10
   type  = "network-hdd"
   zones = ["europe-west3-a",
@@ -380,14 +380,14 @@ resource "google_compute_instance_template" "k8_ingresses" {
   }
 }
 
-data "google_compute_image" "my_image" {
+data "google_compute_image" "ingress_image" {
   family  = "debian-9"
   project = "debian-cloud"
 }
 
 resource "google_compute_disk" "k8_ingresses_disk" {
   name  = "existing-disk"
-  image = data.google_compute_image.my_image.self_link
+  image = data.google_compute_image.ingress_image.self_link
   size  = 10
   type  = "network-hdd"
   zones = ["europe-west3-a",
@@ -431,56 +431,56 @@ resource "google_compute_health_check" "autohealing_external_load_balancing" {
 }
 
 # Bucket for storing cluster backups
-resource "google_starage_bucket" "backup_bucket" {
+resource "google_storage_bucket" "backup_bucket" {
   name          = "backup_bucket"
   force_destroy = true
   credentials   = var.credentials
-
+}
 
 # Output values
 
-output "google_compute_instance_group_manager_public_ips" {
+output "google_compute_instance_group_manager_k8_masters_public_ips" {
   description = "Public IP addresses for master-nodes"
   value = [
-    google_compute_instance_group_manager.k8_masters_manager.instance_template.*.,
+    google_compute_instance_group_manager.k8_masters_manager.instance_template,
     google_compute_instance_template.k8_masters.network_interface.0.nat,
   ]
 }
-output "google_compute_instance_group_manager_private_ips" {
+output "google_compute_instance_group_manager_k8_masters_private_ips" {
   description = "Private IP addresses for master-nodes"
   value = [
-    google_compute_instance_group_manager.k8_masters_manager.instance_template.*.,
+    google_compute_instance_group_manager.k8_masters_manager.instance_template,
     google_compute_instance_template.k8_masters.network_interface.0.network_ip,
   ]
 }
-output "google_compute_instance_group_manager_public_ips" {
+output "google_compute_instance_group_manager_k8_workers_public_ips" {
   description = "Public IP addresses for worker-nodes"
-  value       = [
-    google_compute_instance_group_manager.k8_workers_manager.instance_template.*.,
+  value = [
+    google_compute_instance_group_manager.k8_workers_manager.instance_template,
     google_compute_instance_template.k8_workers.network_interface.0.nat,
   ]
 }
 
-output "google_compute_instance_group_manager_private_ips" {
+output "google_compute_instance_group_manager_k8_workers_private_ips" {
   description = "Private IP addresses for worker-nodes"
-  value       = [
-    google_compute_instance_group_manager.k8_workers_manager.instance_template.*.,
+  value = [
+    google_compute_instance_group_manager.k8_workers_manager.instance_template,
     google_compute_instance_template.k8_workers.network_interface.0.network_ip,
   ]
 }
 
 output "instance_group_ingresses_public_ips" {
   description = "Public IP addresses for ingress-nodes"
-  value       = [
-    google_compute_instance_group_manager.k8_ingresses_manager.instance_template.*.,
+  value = [
+    google_compute_instance_group_manager.k8_ingresses_manager.instance_template,
     google_compute_instance_template.k8_ingresses.network_interface.nat,
   ]
 }
 
 output "instance_group_ingresses_private_ips" {
   description = "Private IP addresses for ingress-nodes"
-  value       = [
-    google_compute_instance_group_manager.k8_ingresses_manager.instance_template.*.,
+  value = [
+    google_compute_instance_group_manager.k8_ingresses_manager.instance_template,
     google_compute_instance_template.k8_ingresses.network_interface.network_ip,
   ]
 }
@@ -488,14 +488,4 @@ output "instance_group_ingresses_private_ips" {
 output "load_balancer_public_ip" {
   description = "Public IP address of load balancer"
   value       = google_compute_forwarding_rule.external_load_balancing.ip_address
-}
-
-output "static-key-access-key" {
-  description = "Access key for admin user"
-  value       = yandex_iam_service_account_static_access_key.static-access-key.access_key
-}
-
-output "static-key-secret-key" {
-  description = "Secret key for admin user"
-  value       = yandex_iam_service_account_static_access_key.static-access-key.secret_key
 }
